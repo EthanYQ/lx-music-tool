@@ -5,13 +5,13 @@ import json, sqlite3, shutil, os, time, secrets, re
 WORK = 'D:/Develop/Git_repository/make-something/lx-playlist-export'
 DB_DIR = 'C:/Users/yuanyq/AppData/Roaming/lx-music-desktop/LxDatas'
 DB = f'{DB_DIR}/lx.data.db'
-LIST_NAME = '迁移合并(pop+粤语+Sing)'
+LIST_NAME = '迁移合并2(pop+粤语+Sing)'
 
 M = json.load(open(f'{WORK}/merged.json', encoding='utf-8'))
 
 # ---- 原始平台数据查询表（补 albumMid / media_mid / albumId）----
 qq_songs = json.load(open(f'{WORK}/raw_qq.json', encoding='utf-8'))
-qq_map = {}
+qq_map, qq_file_map = {}, {}
 for s in qq_songs:
     al, f = s.get('album') or {}, s.get('file') or {}
     qq_map[s.get('mid', '')] = {
@@ -19,6 +19,7 @@ for s in qq_songs:
         'num_id': s.get('id'),
         'media_mid': f.get('media_mid', '') or s.get('ksong', {}).get('mid', ''),
     }
+    qq_file_map[s.get('mid', '')] = f
 
 nx_map = {}
 for fn in ['nx1_tracks.json', 'nx2_tracks.json']:
@@ -30,6 +31,34 @@ for fn in ['nx1_tracks.json', 'nx2_tracks.json']:
 def fmt_interval(ms):
     s = int(round((ms or 0) / 1000))
     return f'{s // 60:02d}:{s % 60:02d}' if s > 0 else '00:00'
+
+
+QUALITYS = ['flac24bit', 'flac', 'ape', '320k', '192k', '128k']   # 与 LX 的 QUALITYS 常量一致
+
+
+def qualitys_of(src, sid):
+    """从原始数据取可用音质 {类型: 字节数}。
+    必须写入 meta.qualitys/_qualitys：LX 的换源逻辑要求 meta._qualitys[音质] 存在，
+    播放音质设为 无损/320k 时 getPlayQuality 也会直接读它（无兜底）。"""
+    out = {}
+    if src == 'qq':
+        f = (qq_file_map.get(sid) or {})
+        cand = {'128k': f.get('size_128mp3') or f.get('size_128'),
+                '320k': f.get('size_320mp3') or f.get('size_320'),
+                'flac': f.get('size_flac'),
+                'flac24bit': f.get('size_hires'),
+                'ape': f.get('size_ape')}
+    else:
+        t = nx_map.get(sid, {})
+        cand = {'128k': (t.get('l') or {}).get('size'),
+                '192k': (t.get('m') or {}).get('size'),
+                '320k': (t.get('h') or {}).get('size'),
+                'flac': (t.get('sq') or {}).get('size'),
+                'flac24bit': (t.get('hr') or {}).get('size')}
+    for k, v in cand.items():
+        if v and v > 0:
+            out[k] = v
+    return out
 
 
 def build_row(e):
@@ -56,6 +85,12 @@ def build_row(e):
             'albumId': info.get('album_id'),
         }
         source, mid = 'wy', f'wy_{sid}'
+    q = qualitys_of(src, sid)
+    if q:
+        meta['qualitys'] = [{'type': k, 'size': f'{v / 1024 / 1024:.2f} MiB'}
+                            for k, v in q.items() if k in QUALITYS]
+        meta['_qualitys'] = {k: {'size': f'{v / 1024 / 1024:.2f} MiB'}
+                             for k, v in q.items() if k in QUALITYS}
     return {
         'id': mid,
         'name': e['title'],
