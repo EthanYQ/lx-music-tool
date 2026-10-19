@@ -7,9 +7,9 @@ LX Music 歌单去重工具（可复用）
       且同名组里优先保留不带后缀的原版；默认保留最早出现的那首。
 
 用法（先演练，确认无误再加 --apply 实际写入）：
-    python dedupe_playlist.py --playlist "<playlist-name>"
-    python dedupe_playlist.py --playlist "<playlist-name>" --apply
-    python dedupe_playlist.py --list-id <playlist-id> --apply
+    python dedupe_playlist.py --playlist "你的歌单名"
+    python dedupe_playlist.py --playlist "你的歌单名" --apply
+    python dedupe_playlist.py --list-id <你的歌单id> --apply
     python dedupe_playlist.py --playlist "xxx" --keep last      # 保留最后出现的一首
     python dedupe_playlist.py --playlist "xxx" --db "D:/path/lx.data.db"
 
@@ -75,7 +75,7 @@ def has_suffix(name: str) -> bool:
 
 
 def parse_artists(singer: str) -> set[str]:
-    """把 '徐良、阿悄' / '徐良 / 阿悄' 拆成 {'徐良','阿悄'}。"""
+    """把 '歌手A、歌手B' / '歌手A / 歌手B' 拆成 {'歌手A','歌手B'}。"""
     parts = ARTIST_SPLIT_RE.split(singer or "")
     return {WS_RE.sub(" ", p.strip()).casefold() for p in parts if p.strip()}
 
