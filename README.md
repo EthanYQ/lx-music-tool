@@ -30,6 +30,8 @@ LX 自己没有跨平台去重能力，所以需要在导入前手动做掉。
 | `01_parse_clean.py` | **步骤1+2**：读原始 JSON → 清洗去重 → 产出清单 |
 | `03_write_lx.py` | **步骤3**：读 merged.json → 写入 LX 数据库 |
 | `04_backfill_qualitys.py` | **补救脚本**：给已导入的歌补 `meta.qualitys/_qualitys`（就地 UPDATE，不重建歌单） |
+| `dedupe_playlist.py` | **维护脚本**：歌单内同名+歌手有交集的重复歌曲去重（默认演练） |
+| `remove_disliked.py` | **维护脚本**：删除歌单中已标记「不喜欢」的歌曲（默认演练） |
 | `nx1_tracks.json` / `nx2_tracks.json` | 网易云两个歌单的曲目详情（步骤0 产物） |
 | `raw_qq.json` | QQ 歌单原始 songlist（步骤0 产物，已剥掉 JSONP 外壳） |
 | `merged.json` | 清洗去重后的中间结果（01 与 03 之间的接口文件） |
@@ -343,3 +345,25 @@ python -c "import re;d=open(r'<LX-install-dir>\resources\app.asar','rb').read();
 - 不支持增量更新：LX 里已有同名歌单不会合并，会新建一个
 - **没有实现"外源匹配"**：即把一个平台的歌批量重新匹配成另一个平台（如全部转成酷我 ID）。
   若需要，思路是：拿歌名+歌手搜目标平台 → 用专辑/时长二次校验 → 写回 ID。
+
+## §11 「不喜欢」的存储与清理
+
+LX 的「不喜欢」不是歌单操作，而是**全局规则表**：右键歌曲 →「不喜欢」，或播放栏的不喜欢按钮，
+会把 `歌名@歌手` 写进 `dislike_list` 表（`type='music'`）。它只影响播放（队列会自动跳过），
+**不会从任何歌单里删除歌曲**。设置 → 其他 →「不喜欢列表」里可以看到/编辑这些规则。
+
+规则有三种写法：`歌名@歌手`、`歌名`（只按歌名，忽略歌手）、`@歌手`（屏蔽该歌手）。
+匹配时忽略大小写和首尾空白，歌名里的 `@` 视作 `#`。
+
+`remove_disliked.py` 按同样的规则扫描歌单并删除命中条目：
+
+```bash
+python remove_disliked.py                     # 预览（默认所有歌单）
+python remove_disliked.py --show-rules        # 查看解析出的规则
+python remove_disliked.py --playlist "歌单名"  # 只处理一个歌单
+python remove_disliked.py --apply             # 实际写入（先完全退出 LX）
+```
+
+`--apply` 会先备份 `lx.data.db*` 到 `LxDatas/backup_before_dislike_时间戳/`，然后从
+`my_list_music_info` 和 `my_list_music_info_order` 两张表里删除对应行，并重排该歌单的 `order`。
+不喜欢规则本身会保留（所以这些歌以后播放时仍会被跳过）。
