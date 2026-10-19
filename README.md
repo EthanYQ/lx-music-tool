@@ -63,6 +63,10 @@ PLAYLISTS = [
 
 填好后运行 `python 00_fetch.py`。找不到 `config_local.py` 时会退回 `config_example.py` 的占位配置。
 
+> ⚠️ 运行 `01_parse_clean.py` / `03_write_lx.py` 时，`config_local.py` 里的真实歌单名会写进
+> `merged.json` 和 TSV。这些文件已在仓库中，本地跑完**不要直接提交**带真实歌单名的改动；
+> 如果要更新示例数据，先把歌单名改回 `playlist1/2/3` 再提交。
+
 用到的接口：
 
 | 平台 | 接口 | 拿什么 |
