@@ -2,10 +2,15 @@
 """第三步：把清洗去重后的歌单写入 LX Music 本地歌单 (lx.data.db)"""
 import json, sqlite3, shutil, os, time, secrets, re
 
+try:
+    import config_local as config
+except ImportError:
+    import config_example as config
+
 WORK = os.path.dirname(os.path.abspath(__file__))
 DB_DIR = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'lx-music-desktop', 'LxDatas')
 DB = f'{DB_DIR}/lx.data.db'
-LIST_NAME = '迁移合并歌单'
+LIST_NAME = config.LIST_NAME
 
 M = json.load(open(f'{WORK}/merged.json', encoding='utf-8'))
 

@@ -7,17 +7,27 @@
 """
 import json, os, re, sys, time
 
+try:
+    import config_local as config
+except ImportError:
+    import config_example as config
+
 WORK = os.path.dirname(os.path.abspath(__file__))
-N1 = json.load(open(f'{WORK}/nx1_tracks.json', encoding='utf-8'))   # playlist2
-N2 = json.load(open(f'{WORK}/nx2_tracks.json', encoding='utf-8'))   # playlist3
+N1 = json.load(open(f'{WORK}/nx1_tracks.json', encoding='utf-8'))
+N2 = json.load(open(f'{WORK}/nx2_tracks.json', encoding='utf-8'))
 
 # QQ 歌单（00_fetch.py 已剥掉 JSONP 外壳，存为纯数组）
-q = json.load(open(f'{WORK}/raw_qq.json', encoding='utf-8'))        # playlist1
+q = json.load(open(f'{WORK}/raw_qq.json', encoding='utf-8'))
+
+_labels = {}
+for pl in config.PLAYLISTS:
+    platform = 'QQ' if pl['platform'] == 'qq' else '网易云'
+    _labels[pl['tag']] = f"{pl['name']}({platform})"
 
 PLAYLISTS = [
-    ('playlist1(QQ)',      'qq', 'qq', q),
-    ('playlist2(网易云)', 'wy', 'wy', N1),
-    ('playlist3(网易云)', 'wy', 'wy', N2),
+    (_labels.get('qq', 'playlist1(QQ)'),      'qq', 'qq', q),
+    (_labels.get('nx1', 'playlist2(网易云)'), 'wy', 'wy', N1),
+    (_labels.get('nx2', 'playlist3(网易云)'), 'wy', 'wy', N2),
 ]
 
 def parse_nx(t, source):
@@ -61,9 +71,7 @@ for pl_name, src_code, src, data in PLAYLISTS:
         raw_records.append(r)
 
 print('原始曲目数:', len(raw_records), '| 来源:',
-      {name: len(d) for name, _, _, d in [('playlist1', 'qq', 'qq', q),
-                                          ('playlist2', 'wy', 'wy', N1),
-                                          ('playlist3', 'wy', 'wy', N2)]})
+      {name: len(d) for name, _, _, d in PLAYLISTS})
 
 # ---------- 规范化 ----------
 def norm_basic(s: str) -> str:

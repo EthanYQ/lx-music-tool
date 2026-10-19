@@ -9,18 +9,17 @@
 """
 import json, os, re, time, urllib.request, urllib.parse
 
+try:
+    import config_local as config
+except ImportError:
+    import config_example as config
+    print('提示：未找到 config_local.py，正在使用 config_example.py 的示例配置')
+
 WORK = os.path.dirname(os.path.abspath(__file__))
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
 DELAY = 0.6          # 请求间隔，别把接口打急了
 
-PLAYLISTS = [
-    # 换成你自己的歌单：网易云直接给 playlist id
-    {'tag': 'nx1', 'platform': 'wy', 'id': '你的网易云歌单ID', 'name': 'playlist1'},
-    {'tag': 'nx2', 'platform': 'wy', 'id': '你的网易云歌单ID', 'name': 'playlist2'},
-    # QQ 音乐：给歌单分享链接（支持短链）或 disstid
-    {'tag': 'qq', 'platform': 'qq',
-     'url': '你的QQ歌单分享链接', 'name': 'playlist3'},
-]
+PLAYLISTS = config.PLAYLISTS
 
 
 def get_json(url, referer):

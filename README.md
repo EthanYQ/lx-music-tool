@@ -25,9 +25,11 @@ LX 自己没有跨平台去重能力，所以需要在导入前手动做掉。
 
 | 文件 | 说明 |
 |---|---|
-| `00_fetch.py` | **步骤0**：抓取歌单 → 原始 JSON（改顶部 `PLAYLISTS` 即可换歌单） |
+| `00_fetch.py` | **步骤0**：抓取歌单 → 原始 JSON |
 | `01_parse_clean.py` | **步骤1+2**：读原始 JSON → 清洗去重 → 产出清单 |
 | `03_write_lx.py` | **步骤3**：读 merged.json → 写入 LX 数据库 |
+| `config_example.py` | **配置模板**：复制为 `config_local.py` 后填入自己的歌单信息 |
+| `config_local.py` | **本机私有配置**（歌单 ID/链接/名称），已被 `.gitignore` 忽略，不会提交 |
 | `04_backfill_qualitys.py` | **补救脚本**：给已导入的歌补 `meta.qualitys/_qualitys`（就地 UPDATE，不重建歌单） |
 | `dedupe_playlist.py` | **维护脚本**：歌单内同名+歌手有交集的重复歌曲去重（默认演练） |
 | `remove_disliked.py` | **维护脚本**：删除歌单中已标记「不喜欢」的歌曲（默认演练） |
@@ -42,7 +44,13 @@ LX 自己没有跨平台去重能力，所以需要在导入前手动做掉。
 
 ## 步骤0：`00_fetch.py`（抓取）
 
-改文件顶部的 `PLAYLISTS` 即可换歌单，然后 `python 00_fetch.py`：
+先把配置模板复制成本机私有配置，再填入自己的歌单信息：
+
+```bash
+cp config_example.py config_local.py
+```
+
+`config_local.py` 已被 `.gitignore` 忽略，不会误提交。里面的 `PLAYLISTS` 示例：
 
 ```python
 PLAYLISTS = [
@@ -52,6 +60,8 @@ PLAYLISTS = [
      'url': '你的QQ歌单分享链接', 'name': 'playlist3'},
 ]
 ```
+
+填好后运行 `python 00_fetch.py`。找不到 `config_local.py` 时会退回 `config_example.py` 的占位配置。
 
 用到的接口：
 
@@ -126,15 +136,15 @@ PLAYLISTS = [
 ## 复用到别的歌单（完整流程）
 
 ```bash
-# 1. 改 00_fetch.py 顶部的 PLAYLISTS（歌单 id / 链接、tag、name）
+# 1. 改 config_local.py 里的 PLAYLISTS（歌单 id / 链接、tag、name）
 python 00_fetch.py           # 抓取 → 原始 JSON
 
-# 2. 改 01_parse_clean.py 顶部的 PLAYLISTS 列表（与上一步的 tag 对应）
+# 2. 01_parse_clean.py 会按 tag 自动使用同一份配置里的歌单名
 python 01_parse_clean.py     # 清洗去重 → merged.json + 清单
 
 # 3. 打开 03_去重明细.tsv 扫一眼有没有误合并（重要）
 
-# 4. 改 03_write_lx.py 顶部的 LIST_NAME（歌单名）
+# 4. 改 config_local.py 里的 LIST_NAME（写入 LX 的歌单名）
 python 03_write_lx.py        # 写入 LX 数据库
 
 # 5. 重启 LX Music，侧边栏里出现新歌单
