@@ -10,8 +10,8 @@
 """
 import json, sqlite3, shutil, os, time
 
-WORK = '<repo>'
-DB_DIR = '%APPDATA%/lx-music-desktop/LxDatas'
+WORK = os.path.dirname(os.path.abspath(__file__))
+DB_DIR = os.path.join(os.environ.get('APPDATA', os.path.expanduser('~')), 'lx-music-desktop', 'LxDatas')
 DB = f'{DB_DIR}/lx.data.db'
 
 M = json.load(open(f'{WORK}/merged.json', encoding='utf-8'))

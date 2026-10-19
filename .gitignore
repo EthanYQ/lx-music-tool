@@ -1,2 +1,3 @@
 __pycache__/
 *.pyc
+dedupe_report_*.json

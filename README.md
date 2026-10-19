@@ -8,8 +8,7 @@
                                           └──► 01_原始歌单.tsv / 02_清洗去重.tsv / 03_去重明细.tsv
 ```
 
-**示例**：3 个在线歌单共 653 首
-→ 去重后 **631 首** → 写入 LX 歌单「迁移合并歌单」
+**示例**：3 个在线歌单共 653 首 → 去重后 **631 首** → 写入 LX 歌单「迁移合并歌单」
 
 ---
 
@@ -47,10 +46,10 @@ LX 自己没有跨平台去重能力，所以需要在导入前手动做掉。
 
 ```python
 PLAYLISTS = [
-    {'tag': 'nx1', 'platform': 'wy', 'id': '<netease-playlist-id-1>', 'name': 'playlist2'},
-    {'tag': 'nx2', 'platform': 'wy', 'id': '<netease-playlist-id-2>', 'name': 'playlist3'},
+    {'tag': 'nx1', 'platform': 'wy', 'id': '你的网易云歌单ID', 'name': 'playlist1'},
+    {'tag': 'nx2', 'platform': 'wy', 'id': '你的网易云歌单ID', 'name': 'playlist2'},
     {'tag': 'qq',  'platform': 'qq',
-     'url': '<qq-playlist-link>', 'name': 'playlist1'},
+     'url': '你的QQ歌单分享链接', 'name': 'playlist3'},
 ]
 ```
 
@@ -105,7 +104,7 @@ PLAYLISTS = [
   "src_code": "qq",                    // 主来源平台
   "src_id": "002jNyoG3FhJQt",          // 主来源歌曲 ID
   "all_src": [["qq", "002jNyoG3FhJQt"]],  // 该歌在各平台的全部 ID（含被合并的）
-  "playlists": ["playlist1(QQ)"]             // 来自哪个歌单
+  "playlists": ["playlist1(QQ)"]       // 来自哪个歌单
 }
 ```
 
@@ -146,7 +145,7 @@ python 03_write_lx.py        # 写入 LX 数据库
 
 # 附：LX Music 机制笔记
 
-以下结论均为本项目实测 / 查源码所得。源码位置：`<LX-install-dir>\resources\app.asar`。
+以下结论均为本项目实测 / 查源码所得。源码位置：`<LX 安装目录>\resources\app.asar`。
 
 ## §1 数据存在哪
 
@@ -251,12 +250,12 @@ for (const [source, { actions, type, qualitys }] of Object.entries(apiInfo.sourc
 qualityList.value = qualitys;            // ← 决定"哪些平台的歌可用"
 ```
 
-### 本机实例（实测抓到的配置）
+### 实测示例
 
 | 源 | 配置包 | `vinfo["1"].s` | 支持的平台 |
 |---|---|---|---|
-| **源 A** | `registry.npmjs.org/<source-a-config>` | `kw\|128k&wy\|128k&mg\|128k&tx\|128k&kg\|128k` | 全部五个 |
-| **源 B** | `registry.npmjs.org/<source-b-config>` | `kw\|128k` | **只有酷我，且只有 128k** |
+| **源 A** | `<配置包地址>` | `kw\|128k&wy\|128k&mg\|128k&tx\|128k&kg\|128k` | 全部五个 |
+| **源 B** | `<配置包地址>` | `kw\|128k` | **只有酷我，且只有 128k** |
 
 ### ⚠️ 不要试图改脚本
 
@@ -273,7 +272,7 @@ qualityList.value = qualitys;            // ← 决定"哪些平台的歌可用"
 **灰 = 当前音源没有声明支持这首歌的平台**（跟歌曲怎么导入的、数据对不对全无关）。
 表现：文字变灰 + **下载按钮禁用**。
 
-推论：在只支持酷我的源下，**所有 QQ/网易云歌都灰**；换回支持五平台的源 A即正常。
+推论：在只支持酷我的源下，**所有 QQ/网易云歌都灰**；换回支持五平台的源即正常。
 
 ## §6 "灰但还能播"：LX 会自动跨平台换源
 
@@ -287,7 +286,7 @@ getMusicUrl
            ↑ 拿「歌名+歌手+专辑+时长」去【当前音源可用的平台】里搜同一首歌
 ```
 
-在源 B下（只有酷我可用），QQ 歌会被搜到**酷我的等价版本**并从酷我播放。
+在只支持酷我的源下，QQ 歌会被搜到**酷我的等价版本**并从酷我播放。
 **列表里它仍然是 `tx`（所以还是灰的），只是播放时换了平台。**
 
 取证方法（本项目实测用过）：
@@ -322,7 +321,7 @@ curl http://127.0.0.1:23330/status
 python -c "import base64,zlib,json;d=json.load(open(r'%APPDATA%\lx-music-desktop\LxDatas\user_api.json',encoding='utf-8'));print(zlib.decompress(base64.b64decode(d['userApis'][0]['script'][3:])).decode())"
 
 # 3. 查 asar 里的实现（webpack 保留了模块路径注释，很好用）
-python -c "import re;d=open(r'<LX-install-dir>\resources\app.asar','rb').read();print(sorted(set(m.group(1).decode() for m in re.finditer(rb';// \./(src/[^\s]+)', d))))"
+python -c "import re;d=open(r'<LX 安装目录>\resources\app.asar','rb').read();print(sorted(set(m.group(1).decode() for m in re.finditer(rb';// \./(src/[^\s]+)', d))))"
 ```
 
 **沙箱跑自定义源**（复刻 `globalThis.lx` 注入环境，抓它上报的 `sources`）：

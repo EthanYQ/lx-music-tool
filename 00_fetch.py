@@ -7,19 +7,19 @@
   nx*_tracks.json  —— 网易云曲目详情数组（喂给 01_parse_clean.py）
   raw_qq.json      —— QQ 原始 songlist（喂给 01_parse_clean.py / 03_write_lx.py）
 """
-import json, re, time, urllib.request, urllib.parse
+import json, os, re, time, urllib.request, urllib.parse
 
-WORK = '<repo>'
+WORK = os.path.dirname(os.path.abspath(__file__))
 UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
 DELAY = 0.6          # 请求间隔，别把接口打急了
 
 PLAYLISTS = [
-    # 网易云：直接给 playlist id
-    {'tag': 'nx1', 'platform': 'wy', 'id': '<netease-playlist-id-1>', 'name': 'playlist2'},
-    {'tag': 'nx2', 'platform': 'wy', 'id': '<netease-playlist-id-2>', 'name': 'playlist3'},
-    # QQ 音乐：给歌单链接（支持短链）或 disstid
+    # 换成你自己的歌单：网易云直接给 playlist id
+    {'tag': 'nx1', 'platform': 'wy', 'id': '你的网易云歌单ID', 'name': 'playlist1'},
+    {'tag': 'nx2', 'platform': 'wy', 'id': '你的网易云歌单ID', 'name': 'playlist2'},
+    # QQ 音乐：给歌单分享链接（支持短链）或 disstid
     {'tag': 'qq', 'platform': 'qq',
-     'url': '<qq-playlist-link>', 'name': 'playlist1'},
+     'url': '你的QQ歌单分享链接', 'name': 'playlist3'},
 ]
 
 

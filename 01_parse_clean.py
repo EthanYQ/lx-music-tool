@@ -5,9 +5,9 @@
 步骤2: 规范化 + 剥离版本标签 + 跨平台去重
 输出: 01_原始歌单.tsv / 02_清洗去重.tsv
 """
-import json, re, sys, time
+import json, os, re, sys, time
 
-WORK = '<repo>'
+WORK = os.path.dirname(os.path.abspath(__file__))
 N1 = json.load(open(f'{WORK}/nx1_tracks.json', encoding='utf-8'))   # playlist2
 N2 = json.load(open(f'{WORK}/nx2_tracks.json', encoding='utf-8'))   # playlist3
 
